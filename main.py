@@ -19,7 +19,7 @@ from segno import helpers
 from handlers.pagination import create_pagination
 
 logging.basicConfig(level=logging.INFO)  # Устанавливаем уровень логирования
-bot = Bot(token=r"7632707148:AAFjQ2QOYhjmL8rPFKvLISI9bw8YOkzP_hs")  # Создаём класс бота
+bot = Bot()  # Создаём класс бота
 dp = Dispatcher()  # Создаём диспетчер
 dp.include_routers(create_test.router, start.router, pagination.router)  # Присоединяем все роутеры
 
