@@ -27,11 +27,20 @@ def get_skip_test_name_keyb() -> InlineKeyboardMarkup:
     return keyb
 
 def get_final_test_keyb() -> InlineKeyboardMarkup:
-    buttons = [[InlineKeyboardButton(text="Название", callback_data="test_edit_name")],
-               [InlineKeyboardButton(text="Текст", callback_data="test_edit_text")],
-               [InlineKeyboardButton(text="Ответы", callback_data="test_edit_answers")],
+    buttons = [[InlineKeyboardButton(text="Изменить название", callback_data="test_edit_name")],
+               [InlineKeyboardButton(text="Изменить текст", callback_data="test_edit_text")],
+               [InlineKeyboardButton(text="Изменить ответы", callback_data="test_edit_answers")],
                [InlineKeyboardButton(text="Кол-во верных", callback_data="test_edit_count_of_correct")],
-               [InlineKeyboardButton(text="Удалить тест", callback_data="test_delete")],
+               [InlineKeyboardButton(text="Удалить вопрос", callback_data="test_delete")],
+               [InlineKeyboardButton(text="Подтвердить", callback_data="test_accept")]]
+    keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
+    return keyb
+
+def get_final_test_keyb_v2() -> InlineKeyboardMarkup:
+    buttons = [[InlineKeyboardButton(text="Изменить название", callback_data="test_edit_name")],
+               [InlineKeyboardButton(text="Изменить текст", callback_data="test_edit_text")],
+               [InlineKeyboardButton(text="Изменить ответы", callback_data="test_edit_answers")],
+               [InlineKeyboardButton(text="Удалить вопрос", callback_data="test_delete")],
                [InlineKeyboardButton(text="Подтвердить", callback_data="test_accept")]]
     keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyb
@@ -48,32 +57,32 @@ def get_question_create_test() -> InlineKeyboardMarkup:
     return keyb
 
 def get_access_descr_stest_keyb() -> InlineKeyboardMarkup:
-    buttons = [[InlineKeyboardButton(text="Название", callback_data="edit_name")],
-               [InlineKeyboardButton(text="Описание", callback_data="edit_description")],
-               [InlineKeyboardButton(text="Дата", callback_data="edit_date")],
-               [InlineKeyboardButton(text="Доб. под-тесты", callback_data="add_test")],
+    buttons = [[InlineKeyboardButton(text="Изменить название", callback_data="edit_name")],
+               [InlineKeyboardButton(text="Изменить описание", callback_data="edit_description")],
+               [InlineKeyboardButton(text="Изменить дату", callback_data="edit_end_date")],
+               [InlineKeyboardButton(text="Добавить вопросы", callback_data="add_test")],
                [InlineKeyboardButton(text="Отменить создание", callback_data="cancel_fsm")]]
     keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyb
 
 def get_create_stest_keyb() -> InlineKeyboardMarkup:
-    buttons = [[InlineKeyboardButton(text="Название", callback_data="edit_name")],
-               [InlineKeyboardButton(text="Описание", callback_data="edit_description")],
-               [InlineKeyboardButton(text="Дата", callback_data="edit_date")],
-               [InlineKeyboardButton(text="Доб. тесты", callback_data="add_test")],
-               [InlineKeyboardButton(text="Создать", callback_data="access_create_super_test")],
+    buttons = [[InlineKeyboardButton(text="Изменить название", callback_data="edit_name")],
+               [InlineKeyboardButton(text="Изменить описание", callback_data="edit_description")],
+               [InlineKeyboardButton(text="Изменить дату", callback_data="edit_end_date")],
+               [InlineKeyboardButton(text="Добавить вопросы", callback_data="add_test")],
+               [InlineKeyboardButton(text="Создать тест", callback_data="access_create_super_test")],
                [InlineKeyboardButton(text="Отменить создание", callback_data="cancel_fsm")]]
     keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyb
 
 def get_test_selection() -> InlineKeyboardMarkup:
     buttons = [[InlineKeyboardButton(text="Готовые", callback_data="add_created_test_menu")],
-               [InlineKeyboardButton(text="Создать", callback_data="create_new")]]
+               [InlineKeyboardButton(text="Создать", callback_data="create_new_test")]]
     keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyb
 
 def get_del_or_accept_test_keyb(test_id):
-    buttons = [[InlineKeyboardButton(text="Ок", callback_data="add_test")],
+    buttons = [[InlineKeyboardButton(text="Ок", callback_data="cancel_edit")],
                [InlineKeyboardButton(text="Отмена", callback_data=f"delete_test_{test_id}")]]
     keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyb

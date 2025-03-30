@@ -1,9 +1,93 @@
 import asyncio
+from random import randint
+
 from aiogram import Router, F, Bot
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery
+from aiogram.utils.formatting import Text, Bold, Pre
+
 from DataBase.DAO import DAO
 from bot_classes import *
+from inline_keyboards.start_test import get_test_keyb_one_answ, get_test_keyb_many_answ
 
-class Get(StatesGroup):
-    TestName = State()
+router = Router()
+
+class Testing(StatesGroup):
+    answer = State()
+    super_test = SuperTest
+    test_id = 0
+    answers = list[UserTestAnswer]
+
+def shift_right(arr, n):
+    """Функция сдвигает индексы списка на n позиций"""
+    n = n % len(arr)  # Учитываем случай, когда n > длины массива
+    return arr[-n:] + arr[:-n]
+
+def test_to_str(test: Test, num: int) -> str:
+    text = Pre(test.text, language=f"Вопрос_{num}")
+    return text.as_markdown()
+
+async def save_data_end_edit_msg(state: FSMContext, new_state, bot: Bot, data, chat_id: int, text: str,
+                                 keyboard = None):
+    """Функция удаляет старое сообщение, отправляет новое, заносит его id в data, и изменяет стейт пользователя"""
+    await bot.delete_message(chat_id, data['start_test_msg_id'])
+    bot_msg = await bot.send_message(chat_id, text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN_V2)
+    data['start_test_msg_id'] = bot_msg.message_id
+    await state.set_state(new_state)
+    await state.set_data(data)
+
+@router.callback_query(F.data.startswith('start_super_test_'))
+async def start_test(calb: CallbackQuery, state: FSMContext):
+    msg = calb.message
+    await state.clear()
+    stest_id = calb.data.split('_')[3]
+    super_test = DAO.SuperTest.get_for_id(stest_id)
+
+    data = {'super_test': super_test,
+            'test_num': 0,
+            'answers': [],
+            'shifts': [randint(0, 16) for i in range(len(super_test.tests_id))]}
+
+    test: Test = DAO.Test.get(data['super_test'].tests_id[data['test_num']])
+    data['test'] = test
+    text = test_to_str(test, data['test_num'] + 1)
+
+    keyb = get_test_keyb_many_answ(test, [], data['shifts'][0])
+
+    await state.set_data(data)
+    await msg.edit_text(text, reply_markup=keyb, parse_mode=ParseMode.MARKDOWN_V2)
+
+@router.callback_query(F.data.startswith('test_answer_'))
+async def start_test(calb: CallbackQuery, state: FSMContext):
+    msg = calb.message
+    data = await state.get_data()
+    answer_id = int(calb.data.split('_')[2])
+    super_test: SuperTest = data['super_test']
+    test: Test = data['test']
+    answers: list[UserTestAnswer] = data['answers']
+
+    print('fff')
+    #  Если на настоящий тест даётся только один вариант ответа, то принимаем его и переходим к следующему вопросу
+    if test.count_of_correct == 1 and test.type == TestType.Quiz:
+        data['test_num'] += 1 if len(super_test.tests_id) - 2 >= data['test_num'] else data['test_num']
+        answers.append(UserTestAnswer(super_test.tests_id[data['test_num']], [answer_id]))
+        new_test = DAO.Test.get(super_test.tests_id[data['test_num']])
+        selected = []
+        #  Заносим в выбранные те ответы, которые были даны на этот тест, если такие были
+        for answer in answers:
+            if answer.test_id == new_test.id:
+                selected.append(*answer.answer)
+                break
+
+        test: Test = DAO.Test.get(data['super_test'].tests_id[data['test_num']])
+        data['test'] = test
+        text = test_to_str(test, data['test_num'] + 1)
+        print(data['test_num'], test)
+
+        keyb = get_test_keyb_many_answ(test, [], data['shifts'][data['test_num']])
+
+        await state.set_data(data)
+        await msg.edit_text(text, reply_markup=keyb, parse_mode=ParseMode.MARKDOWN_V2)
+

@@ -28,7 +28,7 @@ async def create_pagination(state: FSMContext, texts: list[str], indexes: list[i
     await state.set_data(data)
     pagination = Pagination(pagination_data)
 
-    text = f"Стр. {page_num + 1} / {pagination.get_last_page_num()}"
+    text = f"Страница {page_num + 1} / {pagination.get_last_page_num()}"
 
     keyb = get_pagination_keyb(pagination)
     return tuple([text, keyb])
@@ -39,6 +39,7 @@ async def pagination_step(calb: CallbackQuery, state: FSMContext):
     step_str = calb.data.split("_")[1]
     step = -1 if step_str == "next" else 1
     data = await state.get_data()
+
     pagination = Pagination(data['pagination_data'])
     pagination.page_num = pagination.page_num + step
 

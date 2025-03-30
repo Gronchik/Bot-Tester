@@ -7,13 +7,14 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, BufferedInputFile
-
+from aiogram.utils.formatting import Text, Code
 from DataBase.DAO import DAO
 from bot_classes import *
 from handlers.pagination import create_pagination
 from inline_keyboards.create_test import get_cancel_keyb, get_skip_keyb, get_access_descr_stest_keyb, \
     get_cancel_edit_keyb, get_test_types_keyb, get_skip_test_name_keyb, get_final_test_keyb, get_cancel_edit_test, \
-    get_question_create_test, get_create_stest_keyb, get_del_or_accept_test_keyb, get_test_selection
+    get_question_create_test, get_create_stest_keyb, get_del_or_accept_test_keyb, get_test_selection, \
+    get_final_test_keyb_v2
 
 router = Router(name="CreatingTestModule")
 
@@ -33,6 +34,7 @@ class Get(StatesGroup):
     SuperTestDescr = State()
     EditSuperTestName = State()
     EditSuperTestDescr = State()
+    EditSuperTestDate = State()
 
 
 async def save_data_end_edit_msg(state: FSMContext, new_state, bot: Bot, data, chat_id: int, text: str,
@@ -55,38 +57,44 @@ async def poosh_msg(msg: Message, text: str):
 
 def get_test_in_str(test: Test) -> str:
     """Функция создаёт текст сообщения с параметрами теста"""
-    text = (f"Название: `{test.name}`"
-            f"\nТекст: `{test.text}`\n"
-            f"Верные ответы: `")
     # Добавляем правильные и не правильные варианты ответа, если тип теста Quiz, если FreeAnswerQuiz, то
     # выводим все ответы, как правильные
+    strs = []
     if test.type == TestType.Quiz:
         for correct in test.variants[0:test.count_of_correct]:
-            text += "" + correct + " "
-        text += f"`\nНеверные ответы: `"
+            strs.append(Code(correct + ' '))
+        strs.append("\nНеверные ответы: ")
         for wrong in test.variants[test.count_of_correct:]:
-            text += wrong + " "
+            strs.append(Code(wrong + ' '))
     elif test.type == TestType.FreeAnswerQuiz:
-        text += ', '.join(test.variants)
-    return text + "`"
+        strs.append(Code(', '.join(test.variants)))
+
+    text = Text(f"Название: ", Code(test.name),
+                f"\nТекст: ", Code(test.text),
+                f"\nВерные ответы: ", *strs)
+
+    return text.as_markdown()
 
 
 def get_super_test_in_str(super_test: SuperTest, finall_str="Выберите что изменить, или подтвердите создание") -> str:
     """Функция создаёт текст сообщения с параметрами супер-теста"""
-    str_date = super_test.end_date.strftime("%d\\.%m\\.%Y %H:%M")
-    description = 'Отсутствует' if super_test.description == '' else '`' + super_test.description + '`'
-    text = (f"Название теста: `{super_test.name}`\n"
-            f"Описание теста: `{description}`\n"
-            f"Дата окончания: `{str_date}`")
+    str_date = super_test.end_date.strftime("%d.%m.%Y %H:%M")
+    description = 'Отсутствует' if super_test.description == '' else  Code(super_test.description)
+    tests_str = []
     # Если супер-тесту присвоены тесты, добавляем их названия
     if len(super_test.tests_id) > 0:
         tests = DAO.Test.multiple_get(super_test.tests_id)
-        text += f"\nПод\\-тесты:"
+        tests_str.append(f"\nВопросы:")
         counter = 0
         for test in tests:
             counter += 1
-            text += f"\n{counter}\\) `{test.text}`"
-    return text
+            tests_str.append(f"\n{counter}) ")
+            tests_str.append(Code(test.text))
+    text = Text(f"Название теста: ", Code(super_test.name),
+                f"\nОписание теста: ", description,
+                f"\nДата окончания: ", Code(str_date),
+                *tests_str)
+    return text.as_markdown()
 
 
 @router.message(Command("create_test"))
@@ -182,10 +190,10 @@ async def edit_description(calb: CallbackQuery, state: FSMContext, bot: Bot):
 async def edit_end_date(calb: CallbackQuery, state: FSMContext, bot: Bot):
     """Функция направляет на введение новой даты окончания супер-теста при его создании"""
     data = await state.get_data()
-    await save_data_end_edit_msg(state, Get.TestDate, bot, data, calb.message.chat.id,
-                                 f"Введите дату и время в формате: день:месяц:год:часы:минуты\n"
+    text = Text(f"Введите дату и время окончания теста в формате: день:месяц:год:часы:минуты\n"
                                  f"Пример: 04:03:2025:16:42 —> \n"
-                                 f"4 марта 2025 года, 16:42")
+                                 f"4 марта 2025 года, 16:42").as_markdown()
+    await save_data_end_edit_msg(state, Get.TestDate, bot, data, calb.message.chat.id, text, get_cancel_edit_keyb())
 
 
 @router.message(StateFilter(Get.EditSuperTestName, Get.EditSuperTestDescr))
@@ -205,11 +213,9 @@ async def edit_descr_or_name(msg: Message, state: FSMContext, bot: Bot):
         keyb = get_access_descr_stest_keyb()
     else:
         keyb = get_create_stest_keyb()
+    text = get_super_test_in_str(super_test)
 
-    await save_data_end_edit_msg(state, None, bot, data, msg.chat.id,
-                                 f"Название теста: `{super_test.name}`\nОписание: "
-                                 f"{'Отсутствует' if super_test.description == '' else '`' + super_test.description + '`'}\n"
-                                 f"Подтвердите создание теста", keyb)
+    await save_data_end_edit_msg(state, None, bot, data, msg.chat.id, text, keyb)
     await msg.delete()
 
 
@@ -219,10 +225,14 @@ async def cancel_edit_super_test(calb: CallbackQuery, state: FSMContext, bot: Bo
     msg = calb.message
     data = await state.get_data()
     super_test: SuperTest = data['new_super_test']
-    await save_data_end_edit_msg(state, None, bot, data, msg.chat.id,
-                                 f"Название теста: `{super_test.name}`\nОписание: "
-                                 f"{'Отсутствует' if super_test.description == '' else '`' + super_test.description + '`'}\n"
-                                 f"Подтвердите создание теста", get_access_descr_stest_keyb())
+    text = get_super_test_in_str(super_test)
+
+    if len(super_test.tests_id) > 0:
+        keyb = get_create_stest_keyb()
+    else:
+        keyb = get_access_descr_stest_keyb()
+
+    await save_data_end_edit_msg(state, None, bot, data, msg.chat.id, text, keyb)
 
 
 @router.callback_query(F.data == "cancel_fsm")
@@ -286,9 +296,10 @@ async def add_created_test_menu(calb: CallbackQuery, state: FSMContext, bot: Bot
         return
 
     pagin = await create_pagination(state, names, indexes, "add_created_test_", "add_test")
+    data = await state.get_data()
     await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id, pagin[0], pagin[1])
 
-@router.callback_query(F.data.startswith("add_create_test_"))
+@router.callback_query(F.data.startswith("add_created_test_"))
 async def add_created_test(calb: CallbackQuery, state: FSMContext, bot: Bot):
     """Функция заносит уже готовый тест из БД в создаваемый супер-тест"""
     test_id = int(calb.data.split('_')[3])
@@ -296,8 +307,28 @@ async def add_created_test(calb: CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
     super_test: SuperTest = data['new_super_test']
     super_test.tests_id.append(test_id)
-    await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id, f"Тест {test.name} добавлен",
+    text = Text(f"Вопрос ", Code(test.name), " добавлен").as_markdown()
+
+    await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id, text,
                                  get_del_or_accept_test_keyb(test_id))
+
+@router.callback_query(F.data.startswith("delete_test_"))
+async def delete_test(calb: CallbackQuery, state: FSMContext, bot: Bot):
+    """Функция удаляет тест из создаваемого супер-теста"""
+    data = await state.get_data()
+    test_id = int(calb.data.split("_")[2])
+    super_test: SuperTest = data['new_super_test']
+    if test_id not in super_test.tests_id:
+        await calb.answer("Вопроса уже нету в тесте")
+    else:
+        super_test.tests_id.remove(test_id)
+        if len(super_test.tests_id) == 0:
+            keyb = get_access_descr_stest_keyb()
+        else:
+            keyb = get_create_stest_keyb()
+
+        text = get_super_test_in_str(super_test)
+        await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id, text, keyb)
 
 @router.callback_query(F.data.startswith("test_type_"))
 async def set_test_type(calb: CallbackQuery, state: FSMContext, bot: Bot):
@@ -309,9 +340,8 @@ async def set_test_type(calb: CallbackQuery, state: FSMContext, bot: Bot):
         await calb.answer("Тип теста не найден")
     else:
         data['new_test'] = Test(None, test_type, None, None, calb.from_user.id, None, None)
-        await save_data_end_edit_msg(state, Get.TestName, bot, data, calb.message.chat.id, "Введите название теста"
-                                                                                           ", его будете видеть только вы",
-                                     get_skip_test_name_keyb())
+        text = Text("Введите название теста, которое будет отображаться в меню, его будете видеть только вы.").as_markdown()
+        await save_data_end_edit_msg(state, Get.TestName, bot, data, calb.message.chat.id, text, get_skip_test_name_keyb())
 
 
 @router.callback_query(F.data == "skip_test_name")
@@ -320,7 +350,7 @@ async def none_test_name(calb: CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
     test: Test = data["new_test"]
     test.name = ""
-    await save_data_end_edit_msg(state, Get.TestDescr, bot, data, calb.message.chat.id, "Введите текст под\\-теста")
+    await save_data_end_edit_msg(state, Get.TestDescr, bot, data, calb.message.chat.id, "Введите текст вопроса")
 
 
 @router.message(Get.TestName)
@@ -329,7 +359,7 @@ async def get_test_name(msg: Message, state: FSMContext, bot: Bot):
     data = await state.get_data()
     test: Test = data["new_test"]
     test.name = msg.text
-    await save_data_end_edit_msg(state, Get.TestDescr, bot, data, msg.chat.id, "Введите текст под\\-теста")
+    await save_data_end_edit_msg(state, Get.TestDescr, bot, data, msg.chat.id, "Введите текст вопроса")
     await msg.delete()
 
 
@@ -366,7 +396,7 @@ async def get_answers(msg: Message, state: FSMContext, bot: Bot):
     if test.type == TestType.FreeAnswerQuiz and len(variants) < 1:
         await poosh_msg(msg, "Количество ответов не может быть меньше одного")
         return
-    elif len(variants) < 2:
+    elif len(variants) < 2 and test.type == TestType.Quiz:
         await poosh_msg(msg, "Количество ответов не может быть меньше двух")
         return
     # Удаляем лишние пробелы по краям
@@ -381,7 +411,8 @@ async def get_answers(msg: Message, state: FSMContext, bot: Bot):
                                  "Введите число верных ответов")
     elif test.type == TestType.FreeAnswerQuiz:
         text = get_test_in_str(test)
-        await save_data_end_edit_msg(state, None, bot, data, msg.chat.id, text, get_final_test_keyb())
+        test.count_of_correct = len(test.variants)
+        await save_data_end_edit_msg(state, None, bot, data, msg.chat.id, text, get_final_test_keyb_v2())
 
     await msg.delete()
 
@@ -415,14 +446,18 @@ async def test_redirect_edit(calb: CallbackQuery, state: FSMContext, bot: Bot):
     """Функция направляет на редактирование того или иного параметра теста"""
     data = await state.get_data()
     parameter = calb.data.split("_", 2)[2]
-    print(parameter)
+    test: Test = data['new_test']
+
     match parameter:
         case "name":
             new_state, text = Get.TestEditName, "Введите название теста, его будете видеть только вы"
         case "text":
-            new_state, text = Get.TestEditDescr, "Введите текст под\\-теста"
+            new_state, text = Get.TestEditDescr, "Введите текст вопроса"
         case "answers":
-            new_state, text = Get.TestEditAnswers, "Введите через точку с запятой ответы, первыми расположив верные варианты ответа"
+            if test.type == TestType.Quiz:
+                new_state, text = Get.TestEditAnswers, "Введите ответы через точку с запятой, первыми расположив верные варианты ответа"
+            else:
+                new_state, text = Get.TestEditAnswers, "Введите ответы через точку с запятой"
         case "count_of_correct":
             new_state, text = Get.TestCountCorrect, "Введите число верных ответов"
         case _:
@@ -444,13 +479,20 @@ async def test_edit(msg: Message, state: FSMContext, bot: Bot):
             test.text = msg.text
         case Get.TestEditAnswers:
             variants = msg.text.split(";")
-            if len(variants) <= 1:
-                await poosh_msg(msg, "Количество ответов не может быть меньше двух")
+            if len(variants) <= 1 and test.type == TestType.Quiz:
+                await poosh_msg(msg, "Количество вариантов ответов не может быть меньше двух")
                 return
             else:
                 test.variants = [var.strip() for var in variants]
     text = get_test_in_str(test)
-    await save_data_end_edit_msg(state, None, bot, data, msg.chat.id, text, get_final_test_keyb())
+
+    if test.type == TestType.Quiz:
+        keyb = get_final_test_keyb()
+    else:
+        keyb = get_final_test_keyb_v2()
+
+    await msg.delete()
+    await save_data_end_edit_msg(state, None, bot, data, msg.chat.id, text, keyb)
 
 
 @router.callback_query(lambda calb: calb.data in ['test_delete', 'test_accept'])

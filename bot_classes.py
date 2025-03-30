@@ -63,13 +63,11 @@ class SuperTest:
 @dataclass
 class UserTestAnswer:
     test_id: int
-    answer: int  # id ответа
-    current: bool
+    answer: list[int]  # id ответа
 
     def __init__(self, test_id: int, answer: int):
         self.test_id = test_id
         self.answer = answer
-        self.current = answer == 0
 
 
 @dataclass

@@ -86,7 +86,8 @@ class TestDB:
         data = cur.fetchone()
         variants = data[3].split(";")
         type = get_str_test_type(data[0])
-        test = Test(test_id, type, data[1], variants, data[2], data[3], data[4])
+        test = Test(test_id, type, data[1], variants, data[2], data[4], data[5])
+
         return test
 
     def multiple_get(self, tests_id: list[int]) -> list[Test]:
@@ -94,7 +95,7 @@ class TestDB:
         str_tests = f"test_id == {tests_id[0]}"
 
         for test_id in tests_id[1:]:
-            str_tests += f"AND test_id == {test_id}"
+            str_tests += f" AND test_id == {test_id}"
 
         cur = self.connection.execute(
             """
@@ -179,6 +180,10 @@ class SuperTestDB:
                     LIMIT 1
                     """, (stest_id,))
         data = cur.fetchone()
+        #  Обработка случая, когда ничего не нашли
+        if not data:
+            return None
+        print("data", data, "stest_id", stest_id)
         tests = data[1].split(";")
         end_date = datetime.strptime(data[2], "%Y-%m-%d %H:%M:%S")
         print(end_date)
