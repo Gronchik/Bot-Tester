@@ -21,7 +21,7 @@ from handlers.create_test import get_super_test_in_str, get_test_in_str
 from handlers.pagination import create_pagination
 
 logging.basicConfig(level=logging.INFO)  # Устанавливаем уровень логирования
-bot = Bot(token=r"")  # Создаём класс бота
+bot = Bot(token=r"7632707148:AAEQA7wdbAen6Ds8AAItgyXAHAqVjF4LukE")  # Создаём класс бота
 dp = Dispatcher()  # Создаём диспетчер
 dp.include_routers(create_test.router, start.router, pagination.router, start_test.router)  # Присоединяем все роутеры
 

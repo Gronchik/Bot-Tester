@@ -243,6 +243,7 @@ class AnswersDB:
                     """, (answer_id,))
         data = cur.fetchone()
         answers = data[2].split(";")
+        answers = [i.split(",") for i in answers]
         return LiteUserSuperTestAnswer(answer_id, data[0], data[1], answers)
 
     def get_for_stest(self, stest_id: int) -> list[UserSuperTestAnswer]:
@@ -258,6 +259,7 @@ class AnswersDB:
 
         for data in all_data:
             answers = data[2].split(";")
+            answers = [i.split(",") for i in answers]
             answer = LiteUserSuperTestAnswer(data[0], data[1], stest_id, answers)
             all_answers.append(answer)
 
@@ -277,6 +279,7 @@ class AnswersDB:
 
         for data in all_data:
             answers = data[2].split(";")
+            answers = [i.split(",") for i in answers]
             answer = LiteUserSuperTestAnswer(data[0], user_id, data[1], answers)
             all_answers.append(answer)
 
@@ -295,7 +298,9 @@ class AnswersDB:
 
     def add(self, answer: UserSuperTestAnswer) -> None:
         """Добавляет ответ на супер-тест в БД"""
-        str_answers = ";".join(answer.answers)
+        answer.answers = list(map(str, answer.answers))
+        answerss = [",".join(i) for i in answer.answers]
+        str_answers = ";".join(answerss)
         self.connection.execute(
                     """
                     INSERT INTO answers (user_tid, stest_id, answers)

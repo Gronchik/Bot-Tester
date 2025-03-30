@@ -64,10 +64,24 @@ class SuperTest:
 class UserTestAnswer:
     test_id: int
     answer: list[int]  # id ответа
+    result = float
 
-    def __init__(self, test_id: int, answer: int):
+    def __init__(self, test_id: int, answers: [int], test: Test):
         self.test_id = test_id
-        self.answer = answer
+        self.answer = answers
+        if test.type == TestType.Quiz and test.count_of_correct == 1:
+            self.result = 1 if answers[0] == 0 else 0
+        elif test.type == TestType.Quiz and test.count_of_correct > 1:
+            cnt = 0
+            for i in answers:
+                if i >= test.count_of_correct - 1:
+                    cnt += 1
+                else:
+                    cnt -= 1
+            self.result = round(cnt / test.count_of_correct, 2) if cnt > 0 else 0
+        else:
+            self.result = 1 if answers[0] in test.variants else 0
+
 
 
 @dataclass

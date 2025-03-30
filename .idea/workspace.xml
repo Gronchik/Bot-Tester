@@ -4,16 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4a702f94-e14b-4d9e-9974-f759de1ae191" name="Changes" comment=".">
+    <list default="true" id="4a702f94-e14b-4d9e-9974-f759de1ae191" name="Changes" comment="..">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DataBase/DAO.py" beforeDir="false" afterPath="$PROJECT_DIR$/DataBase/DAO.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DataBase/DB.db" beforeDir="false" afterPath="$PROJECT_DIR$/DataBase/DB.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bot_classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_classes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/create_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/create_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/pagination.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/pagination.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/start.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/start.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handlers/start_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/start_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inline_keyboards/create_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/inline_keyboards/create_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inline_keyboards/start_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/inline_keyboards/start_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -121,7 +117,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743077628019</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="..">
+      <option name="closed" value="true" />
+      <created>1743293455360</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1743293455360</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -129,6 +133,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="." />
-    <option name="LAST_COMMIT_MESSAGE" value="." />
+    <MESSAGE value=".." />
+    <option name="LAST_COMMIT_MESSAGE" value=".." />
   </component>
 </project>

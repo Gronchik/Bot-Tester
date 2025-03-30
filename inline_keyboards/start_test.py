@@ -24,17 +24,24 @@ def get_test_keyb_one_answ(test: Test, shift: int) -> InlineKeyboardMarkup:
 
 def get_test_keyb_many_answ(test: Test, selected: list[int], shift: int):
     buttons = []
-    for i in range(len(test.variants)):
-        if i in selected:
-            buttons.append([InlineKeyboardButton(text=f'✅ {test.variants[i]}', callback_data=f'test_answer_{i}')])
-        else:
-            buttons.append([InlineKeyboardButton(text=f'🛑 {test.variants[i]}', callback_data=f'test_answer_{i}')])
-    buttons = shift_right(buttons, shift)
 
-    buttons += [[InlineKeyboardButton(text='⬅️', callback_data=f'next_test'),
-                 InlineKeyboardButton(text='➡️', callback_data=f'last_test')],
+    if test.type != TestType.FreeAnswerQuiz:
+        for i in range(len(test.variants)):
+            if i in selected:
+                buttons.append([InlineKeyboardButton(text=f'✅ {test.variants[i]}', callback_data=f'test_answer_{i}')])
+            else:
+                buttons.append([InlineKeyboardButton(text=f'🛑 {test.variants[i]}', callback_data=f'test_answer_{i}')])
+        buttons = shift_right(buttons, shift)
+
+    buttons += [[InlineKeyboardButton(text='⬅️', callback_data=f'last_test'),
+                 InlineKeyboardButton(text='➡️', callback_data=f'next_test')],
                 [InlineKeyboardButton(text='Закончить тест', callback_data=f'confirm_end_test')]]
 
     keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
     return keyb
 
+def get_accept_keyb():
+    buttons = [[InlineKeyboardButton(text='Подтвердить', callback_data='finish_test')],
+               [InlineKeyboardButton(text='Отмена', callback_data='return_test')]]
+    keyb = InlineKeyboardMarkup(inline_keyboard=buttons)
+    return keyb
