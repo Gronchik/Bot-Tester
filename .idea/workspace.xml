@@ -4,13 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4a702f94-e14b-4d9e-9974-f759de1ae191" name="Changes" comment="..">
+    <list default="true" id="4a702f94-e14b-4d9e-9974-f759de1ae191" name="Changes" comment="...">
+      <change afterPath="$PROJECT_DIR$/handlers/results.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handlers/settings.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handlers/tests_menu.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inline_keyboards/settings.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/inline_keyboards/tests_menu.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DataBase/DAO.py" beforeDir="false" afterPath="$PROJECT_DIR$/DataBase/DAO.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DataBase/DB.db" beforeDir="false" afterPath="$PROJECT_DIR$/DataBase/DB.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bot_classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot_classes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/create_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/create_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/pagination.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/pagination.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handlers/start.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/start.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handlers/start_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/start_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inline_keyboards/start_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/inline_keyboards/start_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inline_keyboards/pagination.py" beforeDir="false" afterPath="$PROJECT_DIR$/inline_keyboards/pagination.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -49,13 +57,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\gyesh\PycharmProjects\Bot-Tester" />
@@ -125,7 +133,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743293455360</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="...">
+      <option name="closed" value="true" />
+      <created>1743328155391</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1743328155391</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -134,6 +150,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="." />
     <MESSAGE value=".." />
-    <option name="LAST_COMMIT_MESSAGE" value=".." />
+    <MESSAGE value="..." />
+    <option name="LAST_COMMIT_MESSAGE" value="..." />
   </component>
 </project>

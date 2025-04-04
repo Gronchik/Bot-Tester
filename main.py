@@ -11,7 +11,7 @@ import logging
 
 from qrcode.main import QRCode
 
-from handlers import create_test, start, pagination, start_test
+from handlers import create_test, start, pagination, start_test, tests_menu, results, settings
 from DataBase.DAO import DAO
 from bot_classes import *
 import asyncio
@@ -21,9 +21,10 @@ from handlers.create_test import get_super_test_in_str, get_test_in_str
 from handlers.pagination import create_pagination
 
 logging.basicConfig(level=logging.INFO)  # Устанавливаем уровень логирования
-bot = Bot(token=r"7632707148:AAEQA7wdbAen6Ds8AAItgyXAHAqVjF4LukE")  # Создаём класс бота
+bot = Bot(token=r"7632707148:AAHoNq5mr_V_LdJ2WWngozEWIUZ1qMrO6es")  # Создаём класс бота
 dp = Dispatcher()  # Создаём диспетчер
-dp.include_routers(create_test.router, start.router, pagination.router, start_test.router)  # Присоединяем все роутеры
+dp.include_routers(create_test.router, start.router, pagination.router, start_test.router,
+                   tests_menu.router, results.router, settings.router)  # Присоединяем все роутеры
 
 #@dp.callback_query()
 async def f(calb:CallbackQuery):
@@ -34,12 +35,10 @@ async def reg(msg: Message, state: FSMContext):
     data = await create_pagination(state, ["ergrg", "sggerg", "wegfwe", "ergrg", "sggerg", "wegfwe", "ergrg", "sggerg", "wegfwe", "ergrg", "sggerg", "wegfwe", "ergrg", "sggerg", "wegfwe", "ergrg", "sggerg", "wegfwe", "ergrg", "sggerg", "wegfwe"],
                             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,13,14,15,16,17,18,19,20,21], "callba",
                                    "back")
-    print(data)
     await msg.answer(data[0], reply_markup=data[1])
     pass
 
 async def main():
-    print()
     print(datetime.now() + timedelta(hours=1))
     await dp.start_polling(bot, skip_updates=True)  # Начинаем приём сообщений
 

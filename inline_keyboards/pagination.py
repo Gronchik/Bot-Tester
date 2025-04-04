@@ -15,7 +15,7 @@ def get_pagination_keyb(pag: Pagination):
         buttons.append([InlineKeyboardButton(text=texts[counter], callback_data=pag.callback + str(indexes[counter]))])
         counter += 1
     #  Если страниц при пагинации получается > 1
-    if pag.get_last_page_num() != 0:
+    if pag.get_last_page_num() != 0 and pag.get_last_page_num() != 1:
         buttons.append([InlineKeyboardButton(text="⬅️", callback_data="pagination_next"),
                         InlineKeyboardButton(text="➡️", callback_data="pagination_last")])
 

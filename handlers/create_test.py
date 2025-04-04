@@ -47,9 +47,10 @@ async def save_data_end_edit_msg(state: FSMContext, new_state, bot: Bot, data, c
     await state.set_data(data)
 
 
-async def poosh_msg(msg: Message, text: str):
+async def poosh_msg(msg: Message, text: str, not_del = False):
     """Функция выводит пуш-сообщение на 5 секунд и удаляет его"""
-    await msg.delete()
+    if not not_del:
+        await msg.delete()
     bot_msg = await msg.answer(text)
     await asyncio.sleep(5)
     await bot_msg.delete()
@@ -259,7 +260,7 @@ async def access_super_test(calb: CallbackQuery, state: FSMContext, bot: Bot):
     #  использовать, иначе выводим сообщение для создания нового теста
     if len(user_tests) != 0:
         await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id,
-                                     "Хотите использовать готовые тесты?",
+                                     "Хотите использовать готовые вопросы?",
                                      get_test_selection())
     else:
         await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id,
@@ -272,7 +273,7 @@ async def create_new_test(calb: CallbackQuery, state: FSMContext, bot: Bot):
     """Выводит сообщение с выбором типа теста, для создания нового теста"""
     data = await state.get_data()
     await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id,
-                                 "Выберите тип теста:\n1\\) С готовыми ответами\n2\\) Без них",
+                                 "Выберите тип вопроса:\n1\\) С готовыми ответами\n2\\) Без них",
                                  get_test_types_keyb())
 
 @router.callback_query(F.data == "add_created_test_menu")
@@ -337,10 +338,10 @@ async def set_test_type(calb: CallbackQuery, state: FSMContext, bot: Bot):
     str_type = calb.data.split("_")[2]
     test_type = get_str_test_type(str_type)
     if test_type is None:
-        await calb.answer("Тип теста не найден")
+        await calb.answer("Тип вопроса не найден")
     else:
         data['new_test'] = Test(None, test_type, None, None, calb.from_user.id, None, None)
-        text = Text("Введите название теста, которое будет отображаться в меню, его будете видеть только вы.").as_markdown()
+        text = Text("Введите название вопроса, которое будет отображаться в меню, его будете видеть только вы.").as_markdown()
         await save_data_end_edit_msg(state, Get.TestName, bot, data, calb.message.chat.id, text, get_skip_test_name_keyb())
 
 
@@ -369,7 +370,6 @@ async def get_test_text(msg: Message, state: FSMContext, bot: Bot):
     data = await state.get_data()
     test: Test = data["new_test"]
     test.text = msg.text
-    print(test.text, len(test.text))
 
     # Если название теста пустое, то присваиваем ему значение в виде первый 15 символов его текста
     if test.name == "":
@@ -438,8 +438,6 @@ async def get_count_of_correct(msg: Message, state: FSMContext, bot: Bot):
         text = get_test_in_str(test)
         await save_data_end_edit_msg(state, None, bot, data, msg.chat.id, text, get_final_test_keyb())
         await msg.delete()
-        print(test)
-
 
 @router.callback_query(F.data.startswith("test_edit_"))
 async def test_redirect_edit(calb: CallbackQuery, state: FSMContext, bot: Bot):
@@ -450,7 +448,7 @@ async def test_redirect_edit(calb: CallbackQuery, state: FSMContext, bot: Bot):
 
     match parameter:
         case "name":
-            new_state, text = Get.TestEditName, "Введите название теста, его будете видеть только вы"
+            new_state, text = Get.TestEditName, "Введите название вопроса, его будете видеть только вы"
         case "text":
             new_state, text = Get.TestEditDescr, "Введите текст вопроса"
         case "answers":
@@ -504,22 +502,22 @@ async def test_delete_or_accept(calb: CallbackQuery, state: FSMContext, bot: Bot
 
     if calb.data == "test_delete":
         del data['new_test']
-        text = "Тест удалён"
+        text = "Вопрос удалён"
     elif calb.data == "test_accept":
         test_id = DAO.Test.add(test)
         super_test.tests_id.append(test_id)
-        text = "Тест создан"
+        text = "Вопрос создан"
     else:
         await calb.answer("Странный у вас каллбек!")
         return
 
     if len(super_test.tests_id) < 1:
         await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id,
-                                     text + "\nВыберите тип теста:\n1\\) С готовыми ответами\n2\\) Без них",
+                                     text + "\nВыберите тип вопроса:\n1\\) С готовыми ответами\n2\\) Без них",
                                      get_test_types_keyb())
     else:
         await save_data_end_edit_msg(state, None, bot, data, calb.message.chat.id,
-                                     text + "\nСоздать ещё тест?", get_question_create_test())
+                                     text + "\nСоздать ещё вопрос?", get_question_create_test())
 
 
 @router.callback_query(F.data == "create_new_test_decline")

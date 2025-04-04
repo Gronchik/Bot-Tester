@@ -41,10 +41,11 @@ async def pagination_step(calb: CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
     pagination = Pagination(data['pagination_data'])
+
     pagination.page_num = pagination.page_num + step
 
     #  Проверки на случай выхода нулевую или менее страницу и на более, чем возможно
-    if pagination.page_num < 1:
+    if pagination.page_num < 0:
         pagination.page_num = pagination.get_last_page_num() - 1
     elif pagination.page_num >= pagination.get_last_page_num():
         pagination.page_num = 0

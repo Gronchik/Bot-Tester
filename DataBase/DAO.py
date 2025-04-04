@@ -1,4 +1,6 @@
 import sqlite3 as sql
+from ast import Index
+
 from bot_classes import *
 
 class DAO:
@@ -17,6 +19,28 @@ class DAO:
 class UserDB:
     def __init__(self, main_dao: DAO):
         self.connection = main_dao._connection
+
+    def get_creteria(self, user_id):
+        """Возвращает критерии оценки того или иного пользователя"""
+        cur = self.connection.execute(  # Выполняем запрос через объект курсора
+            """
+            SELECT crit
+            FROM users
+            WHERE tid = ?
+            """, (user_id,))
+        data = cur.fetchone()
+        crit = data[0].split('-')
+        return crit
+
+    def set_creteria(self, user_id, creteria):
+        """Устанавливает критерии оценки для пользователя"""
+        self.connection.execute(
+            """
+            UPDATE users
+            SET crit = ?
+            WHERE tid == ?
+            """, ('-'.join(creteria), user_id))
+        self.connection.commit()
 
     def get_user(self, user_id: int) -> User:
         """Функция возвращает объект пользователя по его tid"""
@@ -90,6 +114,10 @@ class TestDB:
 
         return test
 
+    def get_full_test(self, test_id: int) -> Test:
+        """Получить тест с полной информацией"""
+        return self.get(test_id)
+
     def multiple_get(self, tests_id: list[int]) -> list[Test]:
         """Возвращает список объектов класса Test со значениями теста под id = id из передаваемого списка"""
         str_tests = f"test_id == {tests_id[0]}"
@@ -137,7 +165,7 @@ class TestDB:
     def add(self, test: Test) -> int:
         """Функция добавляет тест в БД, и возвращает его id"""
         answers = ";".join(test.variants)  # Переводим в строку возможные ответы
-        print(test)
+
 
         cur = self.connection.execute(
                      """
@@ -170,6 +198,10 @@ class SuperTestDB:
     def __init__(self, main_dao: DAO):
         self.connection = main_dao._connection
 
+    def get_created_tests(self, creator_id: int) -> list[SuperTest]:
+        """Получить все созданные пользователем супер-тесты"""
+        return self.get_for_user(creator_id)
+
     def get_for_id(self, stest_id: int) -> SuperTest:
         """Возвращает супер-тест по его id"""
         cur = self.connection.execute(
@@ -183,10 +215,9 @@ class SuperTestDB:
         #  Обработка случая, когда ничего не нашли
         if not data:
             return None
-        print("data", data, "stest_id", stest_id)
+
         tests = data[1].split(";")
         end_date = datetime.strptime(data[2], "%Y-%m-%d %H:%M:%S")
-        print(end_date)
         super_test = SuperTest(stest_id, tests, data[0], end_date, data[3], data[4])
         return super_test
 
@@ -198,19 +229,19 @@ class SuperTestDB:
                     FROM super_tests
                     WHERE creator_tid == ?
                     """, (creator_id,))
-        data = cur.fetchone()
-        tests = data[1].split(";")
-        end_date = datetime.strptime(data[2], "%Y-%m-%d %H:%M:%S")
-        print(end_date)
-        super_test = SuperTest(data[0], tests, creator_id, end_date, data[3], data[4])
-        return super_test
+        datas = cur.fetchall()
+        stests = []
+        for data in datas:
+            tests = data[1].split(";")
+            end_date = datetime.strptime(data[2], "%Y-%m-%d %H:%M:%S")
+            stests.append(SuperTest(data[0], tests, creator_id, end_date, data[3], data[4]))
+        return stests
 
     def add(self, stest: SuperTest) -> int:
         """Добавляет супер-тест в БД и возвращает его id"""
         str_tests_id = [str(test_id) for test_id in stest.tests_id]
         tests_str = ";".join(str_tests_id)
         end_date = stest.end_date.strftime("%Y-%m-%d %H:%M:%S")
-        print(end_date)
         cur = self.connection.execute(
                     """
                     INSERT INTO super_tests (creator_tid, tests_id, end_date, description, name)
@@ -228,9 +259,28 @@ class SuperTestDB:
                     """, (stest_id,))
         self.connection.commit()
 
+    def edit_end_date(self, stest_id, date: datetime):
+        """Функция обновляет дату окончания супер-теста на date"""
+        end_date = date.strftime("%Y-%m-%d %H:%M:%S")
+        self.connection.execute(
+            """
+            UPDATE super_tests
+            SET end_date = ?
+            WHERE stest_id == ?
+            """, (end_date, stest_id))
+        self.connection.commit()
+
 class AnswersDB:
     def __init__(self, main_dao: DAO):
         self.connection = main_dao._connection
+
+    def get_completed_tests(self, user_id: int) -> list[SuperTest]:
+        """Получить все пройденные пользователем супер-тесты"""
+        cur = self.connection.execute(
+            "SELECT DISTINCT stest_id FROM answers WHERE user_tid = ?",
+            (user_id,)
+        )
+        return [DAO.SuperTest.get_for_id(row[0]) for row in cur.fetchall()]
 
     def get_for_id(self, answer_id: int) -> LiteUserSuperTestAnswer:
         """Возвращает ответ на супер-тест по id ответа"""
@@ -243,10 +293,12 @@ class AnswersDB:
                     """, (answer_id,))
         data = cur.fetchone()
         answers = data[2].split(";")
+        result = float(answers[-1])
+        answers.pop(-1)
         answers = [i.split(",") for i in answers]
-        return LiteUserSuperTestAnswer(answer_id, data[0], data[1], answers)
+        return LiteUserSuperTestAnswer(answer_id, data[0], data[1], answers, result)
 
-    def get_for_stest(self, stest_id: int) -> list[UserSuperTestAnswer]:
+    def get_for_stest(self, stest_id: int) -> list[LiteUserSuperTestAnswer]:
         """Возвращает список из ответов на супер-тест с данным id"""
         cur = self.connection.execute(
                     """
@@ -259,8 +311,10 @@ class AnswersDB:
 
         for data in all_data:
             answers = data[2].split(";")
+            result = float(answers[-1])
+            answers.pop(-1)
             answers = [i.split(",") for i in answers]
-            answer = LiteUserSuperTestAnswer(data[0], data[1], stest_id, answers)
+            answer = LiteUserSuperTestAnswer(data[0], data[1], stest_id, answers, result)
             all_answers.append(answer)
 
         return all_answers
@@ -270,7 +324,7 @@ class AnswersDB:
         """Возвращает все ответы пользователя по его id"""
         cur = self.connection.execute(
                     """
-                    SELECT answer_id, user_tid, answers
+                    SELECT answer_id, stest_id, answers
                     FROM answers
                     WHERE user_tid == ?
                     """, (user_id,))
@@ -279,8 +333,10 @@ class AnswersDB:
 
         for data in all_data:
             answers = data[2].split(";")
+            result = float(answers[-1])
+            answers.pop(-1)
             answers = [i.split(",") for i in answers]
-            answer = LiteUserSuperTestAnswer(data[0], user_id, data[1], answers)
+            answer = LiteUserSuperTestAnswer(data[0], user_id, data[1], answers, result)
             all_answers.append(answer)
 
         return all_answers
@@ -298,8 +354,8 @@ class AnswersDB:
 
     def add(self, answer: UserSuperTestAnswer) -> None:
         """Добавляет ответ на супер-тест в БД"""
-        answer.answers = list(map(str, answer.answers))
-        answerss = [",".join(i) for i in answer.answers]
+        answer.answers = [list(map(str, answ)) for answ in answer.answers]
+        answerss = [",".join(i) for i in answer.answers] + [str(answer.result)]
         str_answers = ";".join(answerss)
         self.connection.execute(
                     """
@@ -316,5 +372,51 @@ class AnswersDB:
                     WHERE answer_id == ?
                     """, (answer_id,))
         self.connection.commit()
+
+    def get_detailed_answers(self, stest_id: int) -> list[dict]:
+        answers = DAO.Answer.get_for_stest(stest_id)
+        results = []
+
+        for answer in answers:
+            user = DAO.User.get_user(answer.user_id)
+            answer_details = []
+
+            # Получаем связанный супер-тест
+            super_test = DAO.SuperTest.get_for_id(answer.stest_id)
+
+            for test_id, answer_ids in zip(super_test.tests_id, answer.answers):
+                test = DAO.Test.get(test_id)
+                if not test:
+                    continue
+
+                # Преобразуем ID ответов в текст
+                decoded_answers = []
+                for ans_id in answer_ids:
+                    try:
+                        if int(ans_id) == 999:
+                            decoded = "-"
+                        else:
+                            decoded = test.variants[int(ans_id)]
+                        decoded_answers.append(decoded)
+                    except ValueError:
+                        decoded_answers.append(ans_id)
+                    except IndexError:
+                        decoded_answers.append(ans_id)
+
+                answer_details.append({
+                    'test_id': test_id,
+                    'question': test.text,
+                    'answers': ", ".join(decoded_answers)
+                })
+
+            results.append({
+                'user_id': user.id,
+                'username': user.username,
+                'name': user.name,
+                'answers': answer_details,
+                'total_score': answer.result
+            })
+
+        return results
 
 DAO = DAO()

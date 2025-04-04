@@ -54,7 +54,6 @@ async def start_test(calb: CallbackQuery, state: FSMContext):
     test: Test = DAO.Test.get(data['super_test'].tests_id[data['test_num']])
     data['test'] = test
     text = test_to_str(test, data['test_num'] + 1)
-    print(test)
     keyb = get_test_keyb_many_answ(test, [], data['shifts'][0])
 
     if test.type == TestType.FreeAnswerQuiz:
@@ -75,14 +74,18 @@ async def test_answer(calb: CallbackQuery, state: FSMContext):
 
     #  Если на настоящий тест даётся только один вариант ответа, то принимаем его и переходим к следующему вопросу
     if test.count_of_correct == 1 and test.type == TestType.Quiz:
-        data['test_num'] += 1 if len(super_test.tests_id) - 2 >= data['test_num'] else data['test_num']
+        ltest_num = data['test_num']
+        if len(super_test.tests_id) > data['test_num'] + 1:
+            data['test_num'] += 1
+        else:
+            await calb.answer("Вопросы закончились")
 
         for answer in answers:
             if answer.test_id == test.id:
                 answers.remove(answer)
                 break
 
-        answers.append(UserTestAnswer(super_test.tests_id[data['test_num']-1], [int(answer_id)], test))
+        answers.append(UserTestAnswer(super_test.tests_id[ltest_num], [int(answer_id)], test))
         new_test = DAO.Test.get(super_test.tests_id[data['test_num']])
         selected = []
         #  Заносим в выбранные те ответы, которые были даны на этот тест, если такие были
@@ -102,6 +105,7 @@ async def test_answer(calb: CallbackQuery, state: FSMContext):
 
         await state.set_data(data)
         await msg.edit_text(text, reply_markup=keyb, parse_mode=ParseMode.MARKDOWN_V2)
+
     elif test.count_of_correct > 1 and test.type == TestType.Quiz:
         answer_now = []
         for i in answers:
@@ -179,7 +183,7 @@ async def msg_answer(msg: Message, state: FSMContext, bot: Bot):
             answers.remove(answer)
             break
 
-    answers.append(UserTestAnswer(super_test.tests_id[data['test_num']], msg.text, test))
+    answers.append(UserTestAnswer(super_test.tests_id[data['test_num']], [msg.text], test))
     text = test_to_str(test, data['test_num'] + 1)
     text += "\n" + Pre(msg.text, language="Ответ").as_markdown()
 
@@ -230,6 +234,7 @@ async def swipe_test(calb: CallbackQuery, state: FSMContext):
 async def finish_test(calb: CallbackQuery, state: FSMContext):
     msg = calb.message
     data = await state.get_data()
+
     super_test: SuperTest = data['super_test']
     answers: list[UserTestAnswer] = data['answers']
     points = 0
@@ -249,8 +254,8 @@ async def finish_test(calb: CallbackQuery, state: FSMContext):
 
     result = round(points / len(super_test.tests_id), 2) * 100
 
-    progressbar = "▰" * int(result / 10) + "⎚" * (10 - int(result / 10))
+    progressbar = "🟩" * int(result / 10) + "⬜️" * (10 - int(result / 10))
     text = Text(Bold(f'Результаты: {points}/{len(super_test.tests_id)}\n'),
                 progressbar, " ",  int(result), "%").as_markdown()
-    DAO.Answer.add(UserSuperTestAnswer(None, calb.from_user.id, super_test.id, answers_sort_int))
+    DAO.Answer.add(UserSuperTestAnswer(None, calb.from_user.id, super_test.id, answers_sort_int, result))
     await msg.edit_text(text, parse_mode=ParseMode.MARKDOWN_V2)

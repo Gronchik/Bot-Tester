@@ -2,16 +2,25 @@
 import enum
 from dataclasses import dataclass
 from datetime import datetime
+from uu import encode
+import unicodedata
 import qrcode
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from io import BytesIO
 from math import ceil
+import chardet
 
 class TestType(enum.Enum):
     Quiz = "Quiz"  #
     FreeAnswerQuiz = "FreeAnswerQuiz"  #
+
+def fix_encoding(s: str) -> str:
+    # Преобразуем строку в байты, предполагая исходную кодировку
+    byte_data = s.encode("utf-8")  # Или другой кодировки
+    result = chardet.detect(byte_data)
+    return byte_data.decode(result["encoding"])
 
 def convert_stest_id(stest_id: int) -> str:
     return hex(stest_id * 45348)
@@ -74,14 +83,15 @@ class UserTestAnswer:
         elif test.type == TestType.Quiz and test.count_of_correct > 1:
             cnt = 0
             for i in answers:
-                if i >= test.count_of_correct - 1:
+                if i < test.count_of_correct:
                     cnt += 1
                 else:
                     cnt -= 1
+
             self.result = round(cnt / test.count_of_correct, 2) if cnt > 0 else 0
+
         else:
             self.result = 1 if answers[0] in test.variants else 0
-
 
 
 @dataclass
@@ -90,6 +100,7 @@ class UserSuperTestAnswer:
     user_id: int
     stets_id: int
     answers: list[int]
+    result: float
 
 
 @dataclass
@@ -99,6 +110,7 @@ class LiteUserSuperTestAnswer:  # Переделать
     user_id: int
     stest_id: int
     answers: list[int]
+    result: float
 
 
 @dataclass

@@ -42,6 +42,7 @@ async def start(msg: Message, state: FSMContext):
             await msg.answer(stest_to_str(super_test), reply_markup=get_start_stest_keyb(super_test.id), parse_mode=ParseMode.MARKDOWN_V2)
     else:
         await msg.answer("Вы уже зарегистрированы в боте")
+    await state.set_data(data)
     await msg.delete()
 
 @router.message(GetName.name)
@@ -52,12 +53,14 @@ async def get_name(msg: Message, state: FSMContext):
     await msg.answer(f"Вы были успешно зарегистрированы под именем: {msg.text}\nИзменить имя можно в настройках",
                      parse_mode=ParseMode.MARKDOWN_V2)
 
-    if 'start_test_id' in data.keys:
+    keys = [i for i in data.keys()]
+
+    if 'start_test_id' in keys:
         super_test = DAO.SuperTest.get_for_id(data['start_test_id'])
         if super_test is None:
-            await msg.answer('Тест не найден')
+            await msg.answer('Тест по ссылке не найден')
         else:
             text = stest_to_str(super_test)
-            await msg.answer(text, reply_markup=get_start_stest_keyb(super_test.id))
+            await msg.answer(text, reply_markup=get_start_stest_keyb(super_test.id), parse_mode=ParseMode.MARKDOWN_V2)
 
 
